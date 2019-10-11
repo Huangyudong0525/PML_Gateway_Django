@@ -1,0 +1,1 @@
+{"rule3": {"action": 1, "ip": "134.0.0.0", "depth": 8}, "rule2": {"action": 0, "ip": "10.117.62.101", "depth": 24}, "rule1": {"action": 1, "ip": "172.20.2.219", "depth": 16}, "rule7": {"ip": "60.0.0.1", "depth": "24", "action": "0"}, "rule8": {"ip": "60.0.0.1", "depth": "24", "action": "0"}}
