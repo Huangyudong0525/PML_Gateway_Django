@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import http.client
-# Create your views here.
 from multiprocessing import Process
 import subprocess
 import os
@@ -17,10 +16,10 @@ def index(request):
     return render(request, "index.html",)
 
 def killProc(pid):
-    baseProc = psutil.Process(pid)
-    childrenProcList = baseProc.children(recursive=True)
+    baseProc = psutil.Process(pid)   #读取进程
+    childrenProcList = baseProc.children(recursive=True)  #递归读取进程的子进程树
     for proc in childrenProcList:
-        os.kill(proc.pid, signal.SIGINT)
+        os.kill(proc.pid, signal.SIGINT)    #杀死子进程
         # if (len(proc.children(recursive=True)) == 0):
         # os.kill(pid, signal.SIGINT)
         # else:
@@ -107,30 +106,34 @@ def read_nf_router_conf(request):
     rules_list3 = []
     rules_container = []
     with open('C:/Users/HYD/PycharmProjects/PML_Security_Gateway/SFC/route.conf', "r", encoding='utf-8') as fid:
-        for line in fid.readlines()[1:]:
-            num = line.split(' ')
+        for line in fid.readlines()[1:]:    #将文件按行读取为列表
+            num = line.split(' ')           #每行用空格分隔为两部分，分别用列表存
             rules_list1.append(num[0])
             rules_list2.append(num[1])
-    rules_list3 = [x.strip() for x in rules_list2 if x.strip() != '']
+    rules_list3 = [x.strip() for x in rules_list2 if x.strip() != '']   #删除列表中的换行符
     for k in range(len(rules_list1)):
-        rules_dict = dict()
+        rules_dict = dict()                 #将列表值存入字典
         rules_dict['dst_ip'] = rules_list1[k]
         rules_dict['to_service_Id'] = rules_list3[k]
-        rules_json = json.dumps(rules_dict)
-        rules_container.append(rules_json)
+        rules_container.append(rules_dict)       #将字典装入列表
     #     rules_dict[rules_list1[k]] = rules_list3[k]
     # rules_dict1 = json.dumps(rules_dict)
-    return HttpResponse(rules_container)
+    response = JsonResponse(rules_container, safe = False)
+    return response
 
 def read_firewall_conf(request):
     rules_container = []
-    rules_dict2 = {}
     with open('C:/Users/HYD/PycharmProjects/PML_Security_Gateway/SFC/rules.json', "r", encoding='utf-8') as fid:
-        rules_dict = json.load(fid)
-    # rules_dict1 = json.dumps(rules_dict)
-    #
-    # rules_dict2['rule_name'] = rules_dict1[k]
-    return HttpResponse(rules_dict)
+        rules_dict = json.load(fid)    #将json文件读取并转换为字典
+    key_list =list(rules_dict.keys())     #将字典的key值存进列表
+    for key in range(len(key_list)):
+        rules_dict1 = {}                   #创建新的字典用于存列表装字典格式
+        rules_dict1['rule_name'] = key_list[key]
+        rules_dict1['src_ip'] = rules_dict[key_list[key]]['ip']
+        rules_dict1['depth'] = rules_dict[key_list[key]]['depth']
+        rules_dict1['action'] = rules_dict[key_list[key]]['action']
+        rules_container.append(rules_dict1)        #将字典装进列表
+    return JsonResponse(rules_container, safe = False)
 
 
 def nf_router_conf(request):
