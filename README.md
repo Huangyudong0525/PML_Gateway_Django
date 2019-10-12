@@ -5,10 +5,12 @@ Django开启：
 
 cd PML_Security_Gateway
 
-python manage.py run 1277.0.0.1:8000
+python manage.py run 127.0.0.1:8000
 
 VUE开启：
 
 npm install
 
 npm run dev
+
+(默认127.0.0.1:8080)
