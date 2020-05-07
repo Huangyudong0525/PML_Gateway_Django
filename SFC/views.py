@@ -10,6 +10,8 @@ import signal
 import psutil
 import json
 import paramiko
+import datetime
+import pytz
 
 processes = dict()
 
@@ -240,6 +242,34 @@ def del_firewall_conf(request):
     result["data"] = rules_dict
     return JsonResponse(result)
 
+# flow monitoring
+def flow_monitoring(request):
+    with open('/home/hyd/pmlgate/openNetVM/onvm_web/onvm_json_stats.json', 'r') as fid:
+        rules_dict = json.load(fid)
+    return JsonResponse(rules_dict)
+
+def system_monitoring(request):
+    tz = pytz.timezone('Asia/Shanghai')
+    #data_time = os.popen('echo |date +\'%F %R\'').read()
+    time_stamp = datetime.datetime.now(tz)
+    cpu_test = os.popen('top -bn 1 -i -c|awk \'NR==3{print $8}\'').read()
+    cpu_info = os.popen('cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c').read().strip('    ')  
+
+    mem_total = os.popen('echo|free -m|grep "Mem"|awk \'{print $2}\'').read()
+    mem_used = os.popen('echo|free -m|grep "Mem"|awk \'{print $3}\'').read()
+    swap_total = os.popen('echo|free -m|grep "Swap"|awk \'{print $2}\'').read()
+    swap_used = os.popen('echo|free -m|grep "Swap"|awk \'{print $3}\'').read()
+    disk_test = os.popen('echo|df -hT').read()
+    user_test = os.popen('echo|last -n 10').read()
+    system_data_dict = {}
+    system_data_dict['time_info']=time_stamp.strftime('%Y-%m-%d %H:%M:%S') 
+    system_data_dict['cpu_info']=cpu_info.strip() 
+    system_data_dict['cpu_utilization(%)']=round(100-float(cpu_test.rstrip()), 2)
+    system_data_dict['mem_info(MB)']=str(mem_used).strip() + '/' + str(mem_total).strip()
+    system_data_dict['swap_info(MB)']=str(swap_used).strip() + '/' + str(swap_total).strip()
+    system_data_dict['disk_info']=disk_test
+    system_data_dict['user_info']=user_test.strip() 
+    return JsonResponse(system_data_dict)
 
 
 # if __name__ == '__main__':
