@@ -14,6 +14,7 @@ import datetime
 import pytz
 
 processes = dict()
+global_nf_list = []
 
 #解决sudo权限
 #sudopw = "123"
@@ -45,6 +46,7 @@ def choose_nf_router(service_id):
     cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/nf_router ; sudo ./go.sh %s -f ./route.conf " % (service_id)
     devnull = open('/dev/null', 'w')
     p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
+    global_nf_list.append({"name":"路由器","service_id":service_id})
     print("nf_router ok")
     return p.pid
 
@@ -52,6 +54,7 @@ def choose_firewall(service_id, nexthop_id):
     cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/firewall ; sudo ./go.sh %s -d %s -f ./rules.json " % (service_id, nexthop_id)
     devnull = open('/dev/null', 'w')
     p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
+    global_nf_list.append({"name":"防火墙","service_id":service_id,"nexthop_id":nexthop_id})
     print("firewall ok")
     return p.pid
 
@@ -59,7 +62,24 @@ def choose_bridge(service_id):
     cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/bridge ; sudo ./go.sh %s " % (service_id)
     devnull = open('/dev/null', 'w')
     p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
+    global_nf_list.append({"name":"网桥","service_id":service_id})
     print("bridge ok")
+    return p.pid
+
+def choose_aes_encrypt(service_id, nexthop_id):
+    cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/aes_encrypt ; sudo ./go.sh %s -d %s " % (service_id, nexthop_id)
+    devnull = open('/dev/null', 'w')
+    p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
+    global_nf_list.append({"name":"aes 加密","service_id":service_id,"nexthop_id":nexthop_id})
+    print("aes_encrypt ok")
+    return p.pid
+
+def choose_aes_decrypt(service_id, nexthop_id):
+    cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/aes_decrypt ; sudo ./go.sh %s -d %s " % (service_id, nexthop_id)
+    devnull = open('/dev/null', 'w')
+    p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
+    global_nf_list.append({"name":"aes 解密","service_id":service_id,"nexthop_id":nexthop_id})
+    print("aes_decrypt ok")
     return p.pid
 
 # def start_nf_router(service_id):
@@ -101,13 +121,38 @@ def start_bridge(request):
     processes[service_id] = pid
     return JsonResponse(result)
 
+def aes_encrypt(request):
+    service_id = request.POST.get('service_id')
+    nexthop_id = request.POST.get('nexthop_id')
+    pid = choose_aes_encrypt(service_id, nexthop_id)
+    processes[service_id] = pid
+    result = {"Result": "success", "Message": "创建aes_encrypt成功"}
+    result['id'] = service_id
+    return JsonResponse(result)
+
+def aes_decrypt(request):
+    service_id = request.POST.get('service_id')
+    nexthop_id = request.POST.get('nexthop_id')
+    pid = choose_aes_decrypt(service_id, nexthop_id)
+    processes[service_id] = pid
+    result = {"Result": "success", "Message": "创建aes_decrypt成功"}
+    result['id'] = service_id
+    return JsonResponse(result)
+
 def stop_nf(request):
     service_id = request.POST.get('service_id')
     pid = processes[service_id]
     killProc(pid)
+    for nf in range(len(global_nf_list)):
+        if (global_nf_list[nf]["service_id"] == service_id):
+            del global_nf_list[nf]
     result = {"Result": "success", "Message": "删除网络功能成功"}
     result['id'] = service_id
     return JsonResponse(result)
+
+def read_nf(request):
+     global_nf_list_data = global_nf_list
+     return JsonResponse(global_nf_list_data, safe=False)
 
 def read_nf_router_conf(request):
     rules_list1 = []
@@ -213,7 +258,7 @@ def del_nf_router_conf(request):
 def firewall_conf(request):
     rule_name = request.POST.get('rule_name')
     src_ip = request.POST.get('src_ip')
-    depth = request.POST.get('depth')
+    depth = int(request.POST.get('depth'))
     action = int(request.POST.get('action'))
     with open('/home/hyd/pmlgate/openNetVM/examples/firewall/rules.json', 'r') as fid:
     #with open('C:/Users/HYD/PycharmProjects/PML_Security_Gateway/SFC/rules.json', 'r', encoding='utf-8') as fid:

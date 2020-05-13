@@ -32,5 +32,7 @@ urlpatterns = [
     url(r'^del_firewall_conf/', views.del_firewall_conf),
     url(r'^flow_monitoring/', views.flow_monitoring),
     url(r'^system_monitoring/', views.system_monitoring),
-
+    url(r'^read_nf/', views.read_nf),
+    url(r'^aes_encrypt/', views.aes_encrypt),
+    url(r'^aes_decrypt/', views.aes_decrypt),
 ]
