@@ -70,7 +70,7 @@ def choose_aes_encrypt(service_id, nexthop_id):
     cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/aes_encrypt ; sudo ./go.sh %s -d %s " % (service_id, nexthop_id)
     devnull = open('/dev/null', 'w')
     p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
-    global_nf_list.append({"name":"aes 加密","service_id":service_id,"nexthop_id":nexthop_id})
+    global_nf_list.append({"name":"AES加密","service_id":service_id,"nexthop_id":nexthop_id})
     print("aes_encrypt ok")
     return p.pid
 
@@ -78,7 +78,7 @@ def choose_aes_decrypt(service_id, nexthop_id):
     cmd1 = "cd /home/hyd/pmlgate/openNetVM/examples/aes_decrypt ; sudo ./go.sh %s -d %s " % (service_id, nexthop_id)
     devnull = open('/dev/null', 'w')
     p = subprocess.Popen(cmd1, stdout=devnull, shell=True)
-    global_nf_list.append({"name":"aes 解密","service_id":service_id,"nexthop_id":nexthop_id})
+    global_nf_list.append({"name":"AES解密","service_id":service_id,"nexthop_id":nexthop_id})
     print("aes_decrypt ok")
     return p.pid
 
@@ -143,7 +143,7 @@ def stop_nf(request):
     service_id = request.POST.get('service_id')
     pid = processes[service_id]
     killProc(pid)
-    for nf in range(len(global_nf_list)):
+    for nf in range(0, len(global_nf_list)):
         if (global_nf_list[nf]["service_id"] == service_id):
             del global_nf_list[nf]
     result = {"Result": "success", "Message": "删除网络功能成功"}
